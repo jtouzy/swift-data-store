@@ -6,6 +6,8 @@
 //  Licensed under the MIT License.
 //
 
+import Combine
+
 public struct KeyValueStorage<T> where T: Codable & Sendable {
   public typealias GetInitialValue = () async throws -> T
   public typealias StoreInitialValue = () async throws -> T
@@ -33,7 +35,12 @@ public struct KeyValueStorage<T> where T: Codable & Sendable {
     }
     return storedValue
   }
+  @discardableResult
   public func store(_ value: T) async throws -> T {
     try await dataStore.store(value, forKey: key)
+  }
+
+  public func publisher() -> AnyPublisher<T, Error> {
+    dataStore.publisher(forKey: key)
   }
 }
