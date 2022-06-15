@@ -42,8 +42,7 @@ public class UserDefaultsKeyValueDataStore: KeyValueDataStore {
 
   public func publisher<T>(forKey key: String) -> AnyPublisher<T, Swift.Error>
   where T: Codable {
-    UserDefaultsKeyObservation(key: key, on: userDefaults)
-      .publisher()
+    UserDefaultsPublisher(key: key, userDefaults: userDefaults)
       .tryMap { [weak decoder] storedData in
         guard let decoder = decoder else { throw Error.unreachableJsonDecoder }
         return try decoder.decode(T.self, from: storedData)
@@ -58,18 +57,70 @@ extension UserDefaultsKeyValueDataStore {
   }
 }
 
-private class UserDefaultsKeyObservation: NSObject {
-  let key: String
-  private let subject: PassthroughSubject<Data, Never> = .init()
+private struct UserDefaultsPublisher: Publisher {
+  typealias Output = Data
+  typealias Failure = Never
 
-  init(key: String, on userDefaults: UserDefaults) {
+  private let key: String
+  private let userDefaults: UserDefaults
+
+  init(key: String, userDefaults: UserDefaults) {
     self.key = key
+    self.userDefaults = userDefaults
+  }
+
+  func receive<S>(subscriber: S) where S: Subscriber, Failure == S.Failure, Output == S.Input {
+    let subscription = UserDefaultsSubscription(
+      subscriber: subscriber,
+      key: key,
+      userDefaults: userDefaults
+    )
+    subscriber.receive(subscription: subscription)
+  }
+}
+
+private final class UserDefaultsSubscription<SubscriberType: Subscriber>: Subscription
+where SubscriberType.Input == Data {
+  private var subscriber: SubscriberType?
+  private var observation: UserDefaultsKeyObservation?
+
+  init(
+    subscriber: SubscriberType,
+    key: String,
+    userDefaults: UserDefaults
+  ) {
+    self.subscriber = subscriber
+    self.observation = UserDefaultsKeyObservation(key: key, on: userDefaults) { newValue in
+      _ = subscriber.receive(newValue)
+    }
+  }
+
+  func request(_ demand: Subscribers.Demand) {
+  }
+
+  func cancel() {
+    observation = nil
+    subscriber = nil
+  }
+}
+
+private class UserDefaultsKeyObservation: NSObject {
+  typealias Callback = (Data) -> Void
+
+  let key: String
+  let userDefaults: UserDefaults
+  let callback: Callback
+
+  init(key: String, on userDefaults: UserDefaults, callback: @escaping Callback) {
+    self.key = key
+    self.userDefaults = userDefaults
+    self.callback = callback
     super.init()
     userDefaults.addObserver(self, forKeyPath: key, options: [.old, .new], context: nil)
   }
 
-  func publisher() -> AnyPublisher<Data, Never> {
-    subject.eraseToAnyPublisher()
+  deinit {
+    userDefaults.removeObserver(self, forKeyPath: key)
   }
 
   override func observeValue(
@@ -81,6 +132,6 @@ private class UserDefaultsKeyObservation: NSObject {
     guard object != nil, keyPath == key, let new = change?[.newKey] as? Data else {
       return
     }
-    subject.send(new)
+    callback(new)
   }
 }
