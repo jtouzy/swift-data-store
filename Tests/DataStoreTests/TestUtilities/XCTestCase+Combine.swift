@@ -17,7 +17,7 @@ extension XCTestCase {
     line: UInt = #line
   ) async throws -> [Result<T.Output, T.Failure>] {
     var results: [Result<T.Output, T.Failure>] = []
-    let cancellable = publisher.print().sink(
+    let cancellable = publisher.sink(
       receiveCompletion: { completion in
         switch completion {
         case .failure(let error):
