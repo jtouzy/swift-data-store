@@ -30,4 +30,7 @@ extension InMemoryKeyValueDataStore {
   public nonisolated func publisher<T>(forKey key: String) -> AnyPublisher<T, Error> where T: Codable {
     preconditionFailure("Not implemented yet")
   }
+  public nonisolated func stream<T>(forKey key: String) -> AsyncStream<T> {
+    preconditionFailure("Not implemented yet")
+  }
 }
