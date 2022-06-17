@@ -6,7 +6,7 @@
 //  Licensed under the MIT License.
 //
 
-@testable import DataStore
+@testable import SwiftDataStore
 
 import XCTest
 
