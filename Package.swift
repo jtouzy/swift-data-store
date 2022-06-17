@@ -10,7 +10,7 @@ let package = Package(
     .macOS(.v10_15)
   ],
   products: [
-    .library(name: "DataStore", targets: ["DataStore"])
+    .library(name: "SwiftDataStore", targets: ["DataStore"])
   ],
   dependencies: [],
   targets: [
