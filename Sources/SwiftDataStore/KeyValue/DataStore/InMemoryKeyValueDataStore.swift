@@ -11,7 +11,7 @@ import Combine
 public actor InMemoryKeyValueDataStore: KeyValueDataStore {
   private var values: [String: Any] = [:]
 
-  internal init() {
+  public init() {
   }
 }
 
