@@ -23,6 +23,19 @@ extension KeyValueStorage {
 }
 
 extension KeyValueStorage {
+  public static func withNullAsInitial(
+    key: String,
+    dataStore: KeyValueDataStore
+  ) -> KeyValueStorage<T?> {
+    .init(
+      key: key,
+      initialValue: { .none },
+      dataStore: dataStore
+    )
+  }
+}
+
+extension KeyValueStorage {
   public static func withBundleFileAsInitial(
     key: String,
     fromBundleFile bundleFile: String,
