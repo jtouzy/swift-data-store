@@ -14,3 +14,8 @@ public protocol KeyValueDataStore {
   func publisher<T>(forKey key: String) -> AnyPublisher<T, Swift.Error> where T: Codable
   func stream<T>(forKey key: String) -> AsyncStream<T> where T: Codable
 }
+
+public enum KeyValueDataStores {
+  public static let inMemory: KeyValueDataStore = InMemoryKeyValueDataStore()
+  public static let userDefaults: KeyValueDataStore = UserDefaultsKeyValueDataStore()
+}
